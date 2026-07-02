@@ -3,6 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { getDb } from "@/lib/db";
 
+import { LOGIN_RATE_LIMIT } from "./constants";
 import { getAuthenticatedAdmin, signIn } from "./service";
 
 // DB-backed auth needs a live Postgres, which the CI `verify` job does not have.
@@ -105,6 +106,44 @@ describe.skipIf(!hasDatabase)("DB-backed admin auth (integration)", () => {
       expect(clean.ok).toBe(true);
     } finally {
       await db.loginAttempt.deleteMany({ where: { ipKey } });
+    }
+  });
+
+  it("enforces the failure ceiling atomically under concurrent attempts", async () => {
+    const floodEmail = "concurrency@example.test";
+    await db.loginAttempt.deleteMany({ where: { emailKey: floodEmail } });
+    await db.admin.deleteMany({ where: { email: floodEmail } });
+    await db.admin.create({
+      data: {
+        email: floodEmail,
+        passwordHash: await hash("the-right-password", 12),
+        name: "Concurrency Admin",
+        role: "MENU_EDITOR",
+      },
+    });
+
+    try {
+      // Fire many wrong-password attempts at once. Without atomic enforcement
+      // they all pass the read-then-insert check and attempt bcrypt; with it,
+      // only up to the ceiling get through before the rest are blocked.
+      const burst = await Promise.all(
+        Array.from({ length: 12 }, () =>
+          signIn({ email: floodEmail, password: "wrong-password" }),
+        ),
+      );
+
+      const attempted = burst.filter(
+        (r) => !r.ok && r.reason === "invalid_credentials",
+      ).length;
+      expect(attempted).toBeLessThanOrEqual(LOGIN_RATE_LIMIT.maxFailures);
+
+      const recordedFailures = await db.loginAttempt.count({
+        where: { emailKey: floodEmail, success: false },
+      });
+      expect(recordedFailures).toBeLessThanOrEqual(LOGIN_RATE_LIMIT.maxFailures);
+    } finally {
+      await db.loginAttempt.deleteMany({ where: { emailKey: floodEmail } });
+      await db.admin.deleteMany({ where: { email: floodEmail } });
     }
   });
 });
