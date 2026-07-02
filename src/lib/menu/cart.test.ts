@@ -120,6 +120,16 @@ describe("cartReducer edits", () => {
     expect(cartReducer(base, { type: "remove", key }).lines).toHaveLength(0);
     expect(cartReducer(base, { type: "clear" }).lines).toHaveLength(0);
   });
+
+  it("replaces state on hydrate", () => {
+    const hydrated: CartState = {
+      locationId: "poblado",
+      lines: [{ item: negroni, quantity: 5 }],
+    };
+    expect(cartReducer(emptyCart(), { type: "hydrate", state: hydrated })).toEqual(
+      hydrated,
+    );
+  });
 });
 
 describe("cart selectors", () => {

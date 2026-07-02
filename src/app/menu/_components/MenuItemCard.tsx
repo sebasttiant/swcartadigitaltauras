@@ -2,6 +2,7 @@ import { publicMenuDictionary } from "@/lib/i18n/public-menu-dictionary";
 import { featureBadgeLabel, formatPrice, localize } from "@/lib/menu/format";
 import type { Language, MenuItem } from "@/lib/menu/types";
 
+import { AddToCartControls } from "./AddToCartControls";
 import styles from "./menu.module.css";
 
 function priceLabel(item: MenuItem, lang: Language): string {
@@ -51,6 +52,7 @@ export function MenuItemCard({ item, lang }: MenuItemCardProps) {
             <span className={styles.unavailableTag}>{copy.unavailable}</span>
           )}
         </div>
+        <AddToCartControls item={item} />
       </div>
     </article>
   );

@@ -247,3 +247,120 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
+
+/* Add-to-cart controls */
+.addRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.2rem;
+}
+
+.addButton {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-gold);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-gold) 14%, transparent);
+  color: var(--color-gold-strong);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.addButton:active {
+  transform: scale(0.98);
+}
+
+/* Sticky cart summary */
+.cartBar {
+  position: sticky;
+  bottom: 0;
+  z-index: 30;
+  margin-top: 1.5rem;
+  padding: 0.85rem var(--space-page) 1rem;
+  background: color-mix(in srgb, var(--color-surface) 96%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--color-gold) 24%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.cartLines {
+  list-style: none;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 40dvh;
+  overflow-y: auto;
+}
+
+.cartLine {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.cartLineName {
+  min-width: 0;
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+.qty {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex: 0 0 auto;
+}
+
+.qtyButton {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--color-gold) 40%, transparent);
+  background: transparent;
+  color: var(--color-gold-strong);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.qtyValue {
+  min-width: 1.25rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.cartFooter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.cartTotalRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+.cartTotal {
+  color: var(--color-gold-strong);
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.whatsappCta {
+  display: block;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius);
+  background: var(--color-gold);
+  color: #14110c;
+  text-align: center;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}

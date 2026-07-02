@@ -11,6 +11,7 @@ export interface CartState {
 }
 
 export type CartAction =
+  | { type: "hydrate"; state: CartState }
   | {
       type: "add";
       locationId: string;
@@ -54,6 +55,9 @@ function mapLine(
 
 export function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
+    case "hydrate":
+      return action.state;
+
     case "add": {
       if (!action.item.available) {
         return state;
