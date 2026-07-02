@@ -1,0 +1,34 @@
+# Local development preview — NO in-container network required.
+#
+# Use this when the productive image cannot build locally because the Docker
+# daemon's containers have no egress to the npm registry (diagnose with:
+#   docker run --rm node:24.18.0-slim node -e "fetch('https://registry.npmjs.org/pnpm').then(r=>console.log(r.status)).catch(e=>console.error('no egress'))"
+# ).
+#
+# It mounts the host-installed node_modules and runs Next's dev server directly
+# via the local binary, so nothing is downloaded inside the container.
+#
+# Prerequisite (run once on the host, which has network):
+#   pnpm install
+#
+# Then:
+#   docker compose -f docker-compose.dev.yml up -d
+#   open http://localhost:3331/menu
+#
+# This does NOT replace the productive Dockerfile / docker-compose.yml; it is a
+# local escape hatch only. CI still builds the real image as the source of truth.
+name: swcartadigitaltauras_preview_dev
+
+services:
+  web:
+    image: node:24.18.0-slim
+    working_dir: /app
+    command: ["./node_modules/.bin/next", "dev", "-p", "3331", "-H", "0.0.0.0"]
+    volumes:
+      - ./:/app
+    ports:
+      # Same host port as the productive preview. Never 3330 (Reservas).
+      - "${WEB_PORT:-3331}:3331"
+    environment:
+      NODE_ENV: development
+      NEXT_TELEMETRY_DISABLED: "1"

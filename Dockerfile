@@ -6,15 +6,23 @@ ARG NODE_VERSION=24.18.0
 ARG PNPM_VERSION=11.9.0
 
 FROM node:${NODE_VERSION}-slim AS base
+ARG PNPM_VERSION
+# Install pnpm via npm instead of `corepack prepare`. Corepack performs its own
+# signed tarball download of the pnpm binary at build time, which is a frequent
+# failure point behind proxies, mirrors, or strict networks. npm reuses the
+# already-configured registry and is more reliable. NPM_CONFIG_REGISTRY lets a
+# private mirror be injected at build time (option 2 for restricted networks).
+ARG NPM_CONFIG_REGISTRY=https://registry.npmjs.org/
+ENV NPM_CONFIG_REGISTRY=${NPM_CONFIG_REGISTRY}
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-ARG PNPM_VERSION
-RUN corepack enable && corepack prepare pnpm@${PNPM_VERSION} --activate
+RUN npm install -g pnpm@${PNPM_VERSION} \
+    && pnpm config set store-dir /pnpm/store --global
 WORKDIR /app
 
 # --- Dependencies (cached) ---
 FROM base AS deps
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile
 
