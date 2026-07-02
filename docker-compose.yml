@@ -1,0 +1,19 @@
+# Preview stack for Carta Digital Tauras.
+# Fully isolated from Reservas Tauras: distinct project name, distinct port.
+# Reservas production owns 3330 and MUST NOT be touched.
+name: swcartadigitaltauras_preview
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: swcartadigitaltauras-preview:local
+    ports:
+      # Host WEB_PORT (default 3331) -> container 3331. Never 3330.
+      - "${WEB_PORT:-3331}:3331"
+    environment:
+      NODE_ENV: production
+      PORT: "3331"
+      HOSTNAME: "0.0.0.0"
+    restart: unless-stopped
