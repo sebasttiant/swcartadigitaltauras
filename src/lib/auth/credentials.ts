@@ -8,30 +8,22 @@ const dummyHashPromise: Promise<string> = hash(
   12,
 );
 
-function normalizeEmail(value: string): string {
+export function normalizeEmail(value: string): string {
   return value.trim().toLowerCase();
 }
 
-export interface CredentialCheck {
-  email: string;
-  password: string;
-  expectedEmail: string;
-  passwordHash: string;
-}
-
 /**
- * Verify admin credentials against the single configured admin. Always runs a
- * bcrypt comparison (real or dummy) so the response time does not leak whether
- * the email matched.
+ * Compare a password against a stored bcrypt hash. When no hash is given (e.g.
+ * the email did not match any admin) it still runs a bcrypt comparison against
+ * a dummy hash so the timing does not reveal whether the account exists.
  */
-export async function verifyAdminCredentials(
-  input: CredentialCheck,
+export async function verifyPassword(
+  password: string,
+  passwordHash: string | null,
 ): Promise<boolean> {
-  const emailMatches =
-    normalizeEmail(input.email) === normalizeEmail(input.expectedEmail);
-  if (!emailMatches) {
-    await compare(input.password, await dummyHashPromise);
+  if (passwordHash === null) {
+    await compare(password, await dummyHashPromise);
     return false;
   }
-  return compare(input.password, input.passwordHash);
+  return compare(password, passwordHash);
 }
