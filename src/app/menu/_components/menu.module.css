@@ -1,0 +1,241 @@
+.screen {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding-bottom: 3rem;
+}
+
+/* Always-visible language switch. */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.6rem var(--space-page);
+  background: color-mix(in srgb, var(--color-bg) 88%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-gold) 18%, transparent);
+}
+
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--color-gold);
+  border-radius: 999px;
+  color: var(--color-gold-strong);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* Hero */
+.hero {
+  padding: 1.75rem var(--space-page) 1.25rem;
+  text-align: center;
+}
+
+.brand {
+  margin: 0 0 0.5rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--color-gold);
+}
+
+.heroTitle {
+  margin: 0;
+  font-size: clamp(1.6rem, 6vw, 2.4rem);
+  line-height: 1.1;
+}
+
+.heroTagline {
+  margin: 0.6rem auto 0;
+  max-width: 34ch;
+  color: var(--color-muted);
+  font-size: 0.95rem;
+}
+
+/* Location tabs + category chips share a wrapping, no-overflow layout. */
+.tabsNav,
+.catNav {
+  padding: 0.5rem var(--space-page);
+}
+
+.tabsList {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+}
+
+.tab,
+.chip {
+  display: inline-block;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--color-muted) 40%, transparent);
+  color: var(--color-text);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.tabActive {
+  border-color: var(--color-gold);
+  background: color-mix(in srgb, var(--color-gold) 16%, transparent);
+  color: var(--color-gold-strong);
+  font-weight: 600;
+}
+
+.catNav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  position: sticky;
+  top: 3rem;
+  z-index: 10;
+  background: color-mix(in srgb, var(--color-bg) 88%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+/* Featured */
+.featured {
+  padding: 0.5rem 0 1rem;
+}
+
+.featuredSection {
+  margin-top: 1.25rem;
+}
+
+.featuredHeading,
+.categoryHeading {
+  margin: 0 0 0.75rem;
+  padding: 0 var(--space-page);
+  font-size: 1.15rem;
+  color: var(--color-gold-strong);
+}
+
+/* Horizontal rail is contained: it scrolls internally, never the page. */
+.rail {
+  display: flex;
+  gap: 0.85rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 0 var(--space-page) 0.5rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.rail > * {
+  flex: 0 0 78%;
+  max-width: 260px;
+  scroll-snap-align: start;
+}
+
+/* Category listing */
+.menu {
+  padding: 0.5rem 0;
+}
+
+.category {
+  margin-top: 1.5rem;
+  scroll-margin-top: 5.5rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+  padding: 0 var(--space-page);
+}
+
+.emptyMenu {
+  padding: 2rem var(--space-page);
+  text-align: center;
+  color: var(--color-muted);
+}
+
+/* Item card */
+.card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-gold) 14%, transparent);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.cardUnavailable {
+  opacity: 0.55;
+}
+
+.cardMedia {
+  aspect-ratio: 16 / 10;
+  width: 100%;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-gold) 22%, var(--color-surface)),
+    var(--color-surface)
+  );
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.85rem 1rem 1rem;
+}
+
+.badgeRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.badge {
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-gold) 20%, transparent);
+  color: var(--color-gold-strong);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.itemName {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.itemDesc {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+  line-height: 1.35;
+}
+
+.itemFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.15rem;
+}
+
+.price {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-gold-strong);
+}
+
+.unavailableTag {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}

@@ -15,6 +15,8 @@ export interface PublicMenuCopy {
   languageName: string;
   /** Label that switches to the other language. */
   switchLabel: string;
+  /** Short appetite-driving line under the location name in the hero. */
+  heroTagline: string;
   featuredTitle: Record<MenuFeatureKind, string>;
   badge: Record<MenuFeatureKind, string>;
   unavailable: string;
@@ -31,6 +33,7 @@ export const publicMenuDictionary: Record<Language, PublicMenuCopy> = {
   es: {
     languageName: "Español",
     switchLabel: "English",
+    heroTagline: "Parrilla premium, cócteles de autor y brasas al punto.",
     featuredTitle: {
       premium_meat: "Carnes premium",
       cocktail: "Cócteles de autor",
@@ -60,6 +63,7 @@ export const publicMenuDictionary: Record<Language, PublicMenuCopy> = {
   en: {
     languageName: "English",
     switchLabel: "Español",
+    heroTagline: "Premium grill, signature cocktails, fire-kissed cuts.",
     featuredTitle: {
       premium_meat: "Premium cuts",
       cocktail: "Signature cocktails",
