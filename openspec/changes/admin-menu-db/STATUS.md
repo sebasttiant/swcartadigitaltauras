@@ -1,14 +1,14 @@
 # Status — admin-menu-db
 
-_Snapshot: 2026-07-02. Slice 1 (DB + Auth foundation) COMPLETE and verified._
+_Snapshot: 2026-07-02. Slice 1 (DB + Auth foundation) COMPLETE — PR #2 open, CI green, awaiting review (NOT merged)._
 
 ## Where we are
 
 - `main` has the complete, green public product (PR #1 merged): premium menu,
   cart, WhatsApp hand-off, responsive design, Docker preview.
-- This change (DB + admin) has **Slice 1 done and green** on branch
-  `feat/admin-auth` (merged latest `main`; 3 local commits ahead pending — see
-  "Slice 1 result" — NOT yet pushed/merged).
+- Slice 1 (DB + admin) is **done and pushed** on branch `feat/admin-auth`,
+  opened as **PR #2** (`feat/admin-auth` → `main`), ready for review.
+  CI is green (`verify` + `docker` both pass). Not merged; awaiting human review.
 
 ## Slice 1 result (DB + Auth foundation) — DONE
 
@@ -24,10 +24,15 @@ _Snapshot: 2026-07-02. Slice 1 (DB + Auth foundation) COMPLETE and verified._
   volume at `/var/lib/postgresql` (NOT `.../data`) — fixed. Prod internal-only;
   dev publishes 5433.
 - Seed: 1 admin (from env hash), 3 real brands + real WhatsApp numbers,
-  categories, dishes/cocktails with variants, 2 promotions. Idempotent.
-- Verified: lint ✅ typecheck ✅ 78 tests ✅ (63 → +15 auth) build ✅.
-  Postgres 18.3 starts ✅, migrate ✅, seed ✅, end-to-end sign-in / revocation
-  / rate-limit smoke test ✅.
+  categories, dishes/cocktails with variants, 2 promotions. Admin, brands and
+  categories are upserted; **menu items are delete-then-recreate (NOT
+  idempotent for items)** — see the non-destructive-seed follow-up below.
+- Migrations in deploy: a `migrate` compose service runs `pnpm db:deploy`
+  (`prisma migrate deploy`) after `db` is healthy and before `web` starts. Prod
+  never auto-seeds.
+- Verified: lint ✅ typecheck ✅ tests ✅ build ✅, local `docker build` ✅,
+  Postgres 18.3 healthy ✅, migrate ✅, seed ✅, end-to-end sign-in / revocation
+  / rate-limit smoke test ✅. **PR #2 CI green** (`verify` + `docker`).
 
 ## Next: Slice 2 — Admin CRUD MVP (only after Slice 1 merged/green)
 
@@ -68,13 +73,17 @@ _Snapshot: 2026-07-02. Slice 1 (DB + Auth foundation) COMPLETE and verified._
 
 ## Smaller follow-ups noted during Slice 1
 
-- `.env.example` update is blocked by the local tool sandbox — add
-  `POSTGRES_*`, `DATABASE_URL`, `SESSION_SECRET`, `ADMIN_EMAIL`,
-  `ADMIN_PASSWORD_HASH` keys by hand (values documented in the Slice 1 report).
+- **`.env.example`**: the local tool sandbox blocks writing any `.env*` file, so
+  it must be added by hand. Required keys: `WEB_PORT`, `POSTGRES_USER`,
+  `POSTGRES_PASSWORD`, `POSTGRES_DB`, `DATABASE_URL`, `SESSION_SECRET`,
+  `ADMIN_EMAIL`, `ADMIN_PASSWORD_HASH` (safe placeholders only). Exact content
+  is provided in the PR review thread.
+- **DB-backed auth integration tests** (`src/lib/auth/service.integration.test.ts`)
+  run only when `DATABASE_URL` is set, so they cover inactive-admin, sessionVersion
+  revocation and valid-credentials locally but are skipped in the CI `verify` job
+  (no Postgres there). Follow-up: add a Postgres service to CI so these run in CI too.
 - Public fixtures still use placeholder WhatsApp `573001112233`; the DB seed has
   the real numbers. Reconcile when Slice 4 wires the public menu to the DB.
-- Prod stack has no `migrate deploy` step yet; ensure the deploy entrypoint runs
-  it before the first admin query (web connects lazily).
 
 ## Real seed data (from Reservas)
 
