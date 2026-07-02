@@ -30,7 +30,14 @@ export function MenuItemCard({ item, lang }: MenuItemCardProps) {
       className={`${styles.card} ${item.available ? "" : styles.cardUnavailable}`}
       data-available={item.available}
     >
-      <div className={styles.cardMedia} aria-hidden="true" />
+      <div className={styles.cardMedia} aria-hidden={item.imageUrl ? undefined : true}>
+        {item.imageUrl ? (
+          // Photos are admin-managed and may be arbitrary remote URLs, so a
+          // plain <img> is used to avoid next/image remote-pattern coupling.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={item.imageUrl} alt={name} loading="lazy" decoding="async" />
+        ) : null}
+      </div>
       <div className={styles.cardBody}>
         {item.features && item.features.length > 0 ? (
           <div className={styles.badgeRow}>

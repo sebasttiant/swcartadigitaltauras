@@ -56,4 +56,21 @@ describe("MenuItemCard", () => {
     expect(card).toHaveAttribute("data-available", "false");
     expect(screen.getByText("No disponible")).toBeInTheDocument();
   });
+
+  it("renders an admin-managed image when the item has one", () => {
+    render(
+      <MenuItemCard
+        item={{ ...ribeye, imageUrl: "https://cdn.example.com/ribeye.webp" }}
+        lang="en"
+      />,
+    );
+    const img = screen.getByRole("img", { name: "Ribeye" });
+    expect(img).toHaveAttribute("src", "https://cdn.example.com/ribeye.webp");
+    expect(img).toHaveAttribute("loading", "lazy");
+  });
+
+  it("falls back to the decorative media slot when there is no image", () => {
+    render(<MenuItemCard item={ribeye} lang="en" />);
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+  });
 });
