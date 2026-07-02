@@ -1,6 +1,10 @@
 # Explicitly approve native build scripts for trusted dependencies.
 # sharp: Next.js image optimization. unrs-resolver: ESLint module resolver.
 allowBuilds:
+  '@prisma/client': true
+  '@prisma/engines': true
+  esbuild: true
+  prisma: true
   sharp: true
   unrs-resolver: true
 minimumReleaseAgeExclude:
