@@ -1,0 +1,75 @@
+:root {
+  /* Tauras palette — deep warm charcoal, wine/burgundy, muted gold, cream. */
+  --color-bg: #100c0a;
+  --color-bg-elevated: #16110e;
+  --color-surface: #1d1712;
+  --color-surface-2: #241c16;
+  --color-text: #f4ecde;
+  --color-muted: #b6a78d;
+  --color-gold: #c6a15a;
+  --color-gold-strong: #e0c889;
+  --color-wine: #7c1d22;
+  --color-wine-strong: #9a2a2e;
+  --color-line: color-mix(in srgb, var(--color-gold) 16%, transparent);
+
+  --font-body:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+  /* --font-display is injected by next/font (Playfair Display); fall back to a
+     generic serif so headings still read as editorial before the font loads. */
+  --font-serif: var(--font-display), "Playfair Display", Georgia, "Times New Roman",
+    serif;
+
+  --space-page: clamp(1rem, 4vw, 2.5rem);
+  --content-max: 1200px;
+  --radius: 16px;
+  --radius-lg: 22px;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background:
+    radial-gradient(
+      120% 80% at 50% -10%,
+      color-mix(in srgb, var(--color-wine) 22%, transparent),
+      transparent 60%
+    ),
+    var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+}

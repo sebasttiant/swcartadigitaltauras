@@ -1,0 +1,15 @@
+node_modules
+.next
+.git
+.github
+coverage
+Dockerfile
+docker-compose.yml
+.dockerignore
+npm-debug.log*
+.pnpm-debug.log*
+.env
+.env*.local
+openspec
+docs
+README.md
