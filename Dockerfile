@@ -42,7 +42,16 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm build
 
+# --- Migrator (deploy-time schema migrations) ---
+# Reuses the deps stage, which already has node_modules, the Prisma schema, the
+# config and the migrations. Run as a one-shot `migrate` service before `web`
+# starts (see docker-compose.yml). Applies migrations only; never seeds.
+FROM deps AS migrator
+CMD ["pnpm", "db:deploy"]
+
 # --- Runtime (standalone) ---
+# Kept as the LAST stage so a target-less `docker build` (and CI) produces the
+# web image, not the migrator.
 FROM node:${NODE_VERSION}-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production

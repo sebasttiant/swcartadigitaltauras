@@ -10,10 +10,14 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: runner
     image: swcartadigitaltauras-preview:local
     depends_on:
       db:
         condition: service_healthy
+      # Block startup until schema migrations have been applied successfully.
+      migrate:
+        condition: service_completed_successfully
     ports:
       # Host WEB_PORT (default 3331) -> container 3331. Never 3330.
       - "${WEB_PORT:-3331}:3331"
@@ -26,6 +30,22 @@ services:
       ADMIN_EMAIL: "${ADMIN_EMAIL:?set ADMIN_EMAIL}"
       ADMIN_PASSWORD_HASH: "${ADMIN_PASSWORD_HASH:?set ADMIN_PASSWORD_HASH}"
     restart: unless-stopped
+
+  # One-shot: applies pending Prisma migrations (`prisma migrate deploy`) once
+  # the database is healthy, then exits. `web` waits for it to complete. This
+  # NEVER seeds — production data is never overwritten by the stack.
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrator
+    image: swcartadigitaltauras-migrate:local
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-cartadigital}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-cartadigital}?schema=public"
+    restart: "no"
 
   db:
     image: postgres:18-alpine
