@@ -5,9 +5,13 @@
 
 import { getDb } from "@/lib/db";
 
-import { LOGIN_RATE_LIMIT, SESSION_MAX_AGE_SECONDS } from "./constants";
+import {
+  LOGIN_RATE_LIMIT,
+  LOGIN_RATE_LIMIT_IP,
+  SESSION_MAX_AGE_SECONDS,
+} from "./constants";
 import { normalizeEmail, verifyPassword } from "./credentials";
-import { evaluateRateLimit } from "./rate-limit";
+import { evaluateLoginThrottle } from "./rate-limit";
 import {
   createSessionToken,
   getSessionSecret,
@@ -34,17 +38,31 @@ export type SignInResult =
 export async function signIn(input: SignInInput): Promise<SignInResult> {
   const db = getDb();
   const emailKey = normalizeEmail(input.email);
+  const ipKey = input.ipKey ?? null;
   const now = new Date();
 
+  // Pull recent attempts for this email OR this IP in one query, then split them
+  // into the two throttle dimensions.
+  const windowMs = Math.max(LOGIN_RATE_LIMIT.windowMs, LOGIN_RATE_LIMIT_IP.windowMs);
   const recentAttempts = await db.loginAttempt.findMany({
     where: {
-      emailKey,
-      createdAt: { gte: new Date(now.getTime() - LOGIN_RATE_LIMIT.windowMs) },
+      createdAt: { gte: new Date(now.getTime() - windowMs) },
+      OR: [{ emailKey }, ...(ipKey ? [{ ipKey }] : [])],
     },
-    select: { success: true, createdAt: true },
+    select: { emailKey: true, ipKey: true, success: true, createdAt: true },
   });
+  const emailAttempts = recentAttempts.filter((a) => a.emailKey === emailKey);
+  const ipAttempts = ipKey
+    ? recentAttempts.filter((a) => a.ipKey === ipKey)
+    : [];
 
-  const decision = evaluateRateLimit(recentAttempts, now, LOGIN_RATE_LIMIT);
+  const decision = evaluateLoginThrottle(emailAttempts, ipAttempts, now, {
+    email: LOGIN_RATE_LIMIT,
+    ip: LOGIN_RATE_LIMIT_IP,
+  });
+  // Blocked path returns before any admin lookup or bcrypt work, so a throttled
+  // source cannot drive CPU cost. Blocked attempts are not recorded, so the
+  // window can age out for a legitimate user who simply retried too fast.
   if (decision.blocked) {
     return { ok: false, reason: "rate_limited", retryAfterMs: decision.retryAfterMs };
   }
@@ -60,7 +78,7 @@ export async function signIn(input: SignInInput): Promise<SignInResult> {
   await db.loginAttempt.create({
     data: {
       emailKey,
-      ipKey: input.ipKey ?? null,
+      ipKey,
       success: passwordOk,
       reason: passwordOk ? null : admin ? "bad_password" : "unknown_email",
     },

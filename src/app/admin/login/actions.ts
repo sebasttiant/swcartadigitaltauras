@@ -1,6 +1,6 @@
 "use server";
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import {
@@ -8,6 +8,7 @@ import {
   ADMIN_LOGIN_PATH,
   SESSION_COOKIE_NAME,
 } from "@/lib/auth/constants";
+import { deriveClientKey } from "@/lib/auth/ip";
 import { signIn } from "@/lib/auth/service";
 
 export interface LoginState {
@@ -26,7 +27,20 @@ export async function loginAction(
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
 
-  const result = await signIn({ email, password });
+  // Derive a hashed, coarse client key for per-IP throttling. When no trusted
+  // IP or secret is available we simply omit it and fall back to email-only.
+  const headerList = await headers();
+  const secret = process.env.SESSION_SECRET ?? "";
+  const ipKey =
+    secret.length >= 32
+      ? (deriveClientKey(
+          headerList.get("x-forwarded-for"),
+          headerList.get("x-real-ip"),
+          secret,
+        ) ?? undefined)
+      : undefined;
+
+  const result = await signIn({ email, password, ipKey });
 
   if (!result.ok) {
     if (result.reason === "rate_limited") {

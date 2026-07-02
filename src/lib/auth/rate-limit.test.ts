@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { evaluateRateLimit, type LoginAttemptRecord } from "./rate-limit";
+import {
+  evaluateLoginThrottle,
+  evaluateRateLimit,
+  type LoginAttemptRecord,
+} from "./rate-limit";
 
 const config = { windowMs: 15 * 60 * 1000, maxFailures: 5 };
 const now = new Date("2026-07-02T12:00:00.000Z");
@@ -55,5 +59,60 @@ describe("evaluateRateLimit", () => {
 
     // Oldest failure is 5000ms old; it ages out at windowMs, so retry ~= window - 5000.
     expect(result.retryAfterMs).toBe(config.windowMs - 5000);
+  });
+});
+
+describe("evaluateLoginThrottle (email + ip combined)", () => {
+  const throttle = {
+    email: { windowMs: 15 * 60 * 1000, maxFailures: 5 },
+    ip: { windowMs: 15 * 60 * 1000, maxFailures: 20 },
+  };
+
+  function n(count: number): LoginAttemptRecord[] {
+    return Array.from({ length: count }, (_, i) => ({
+      success: false,
+      createdAt: new Date(now.getTime() - (i + 1) * 1000),
+    }));
+  }
+
+  it("allows when both dimensions are under their thresholds", () => {
+    expect(evaluateLoginThrottle(n(4), n(19), now, throttle)).toEqual({
+      blocked: false,
+      retryAfterMs: 0,
+    });
+  });
+
+  it("blocks when the email dimension is over its threshold", () => {
+    const result = evaluateLoginThrottle(n(5), n(1), now, throttle);
+    expect(result.blocked).toBe(true);
+    expect(result.retryAfterMs).toBeGreaterThan(0);
+  });
+
+  it("blocks when the ip dimension is over its threshold", () => {
+    const result = evaluateLoginThrottle(n(1), n(20), now, throttle);
+    expect(result.blocked).toBe(true);
+    expect(result.retryAfterMs).toBeGreaterThan(0);
+  });
+
+  it("reports retryAfter as the max across blocked dimensions", () => {
+    // Email: 5 failures, oldest 5000ms old. IP: 20 failures, oldest 20000ms old.
+    const emailAttempts: LoginAttemptRecord[] = [
+      { success: false, createdAt: new Date(now.getTime() - 5000) },
+      ...n(4),
+    ];
+    const ipAttempts: LoginAttemptRecord[] = [
+      { success: false, createdAt: new Date(now.getTime() - 20000) },
+      ...n(19),
+    ];
+    const result = evaluateLoginThrottle(emailAttempts, ipAttempts, now, throttle);
+
+    const emailRetry = throttle.email.windowMs - 5000;
+    const ipRetry = throttle.ip.windowMs - 20000;
+    expect(result.retryAfterMs).toBe(Math.max(emailRetry, ipRetry));
+  });
+
+  it("considers only the email dimension when there are no ip attempts", () => {
+    expect(evaluateLoginThrottle(n(5), [], now, throttle).blocked).toBe(true);
+    expect(evaluateLoginThrottle(n(4), [], now, throttle).blocked).toBe(false);
   });
 });

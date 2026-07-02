@@ -49,3 +49,32 @@ export function evaluateRateLimit(
 
   return { blocked: true, retryAfterMs: Math.max(0, retryAfterMs) };
 }
+
+export interface LoginThrottleConfig {
+  email: RateLimitConfig;
+  ip: RateLimitConfig;
+}
+
+/**
+ * Combine the per-email and per-IP limits: sign-in is blocked when either
+ * dimension is over its threshold, and `retryAfterMs` is the longest wait among
+ * the blocked dimensions. IP attempts may be empty (no trusted client IP), in
+ * which case only the email dimension applies.
+ */
+export function evaluateLoginThrottle(
+  emailAttempts: readonly LoginAttemptRecord[],
+  ipAttempts: readonly LoginAttemptRecord[],
+  now: Date,
+  config: LoginThrottleConfig,
+): RateLimitDecision {
+  const byEmail = evaluateRateLimit(emailAttempts, now, config.email);
+  const byIp = evaluateRateLimit(ipAttempts, now, config.ip);
+
+  const blocked = byEmail.blocked || byIp.blocked;
+  const retryAfterMs = Math.max(
+    byEmail.blocked ? byEmail.retryAfterMs : 0,
+    byIp.blocked ? byIp.retryAfterMs : 0,
+  );
+
+  return { blocked, retryAfterMs };
+}

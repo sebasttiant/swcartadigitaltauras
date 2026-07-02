@@ -9,6 +9,14 @@ export const LOGIN_RATE_LIMIT = {
   maxFailures: 5,
 } as const;
 
+// Per-IP throttling runs alongside the per-email limit. It is deliberately
+// laxer (an IP may be a shared NAT for several legitimate users) but still caps
+// credential-stuffing / bcrypt-CPU abuse from a single source.
+export const LOGIN_RATE_LIMIT_IP = {
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  maxFailures: 20,
+} as const;
+
 /** Where the admin panel lives; used by middleware and redirects. */
 export const ADMIN_LOGIN_PATH = "/admin/login";
 export const ADMIN_HOME_PATH = "/admin";

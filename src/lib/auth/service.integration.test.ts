@@ -78,4 +78,33 @@ describe.skipIf(!hasDatabase)("DB-backed admin auth (integration)", () => {
     });
     expect(await getAuthenticatedAdmin(result.token)).toBeNull();
   });
+
+  it("throttles by IP across different emails, independent of the email limit", async () => {
+    const ipKey = "integration-flood-ip-key";
+    // Simulate a burst of failures from one IP against many different emails —
+    // none of them the real admin, so the email dimension stays clear.
+    await db.loginAttempt.createMany({
+      data: Array.from({ length: 20 }, (_, i) => ({
+        emailKey: `flood-${i}@example.test`,
+        ipKey,
+        success: false,
+        reason: "bad_password",
+      })),
+    });
+
+    try {
+      // Even with correct credentials, this source IP is blocked.
+      const result = await signIn({ email, password, ipKey });
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.reason).toBe("rate_limited");
+      }
+
+      // A request without that IP still authenticates (limit is per-IP).
+      const clean = await signIn({ email, password });
+      expect(clean.ok).toBe(true);
+    } finally {
+      await db.loginAttempt.deleteMany({ where: { ipKey } });
+    }
+  });
 });
