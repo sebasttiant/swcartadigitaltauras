@@ -41,3 +41,23 @@ jobs:
         run: pnpm build
         env:
           NEXT_TELEMETRY_DISABLED: "1"
+
+  docker:
+    # Guards the Docker preview image so a missing asset (e.g. public/) fails
+    # here, not on a machine trying to run the preview.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build preview image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: swcartadigitaltauras:preview
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
