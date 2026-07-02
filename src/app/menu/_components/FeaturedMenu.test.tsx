@@ -6,20 +6,25 @@ import { FeaturedMenu } from "@/app/menu/_components/FeaturedMenu";
 import { TAURAS_LOCATIONS } from "@/lib/menu/fixtures";
 import type { MenuLocation } from "@/lib/menu/types";
 
-const poblado = TAURAS_LOCATIONS[0] as MenuLocation;
+const steakhouse = TAURAS_LOCATIONS.find((l) => l.id === "steakhouse")!;
+const barLounge = TAURAS_LOCATIONS.find((l) => l.id === "bar-lounge")!;
 
 describe("FeaturedMenu", () => {
-  it("renders premium, cocktail, and recommended sections in Spanish", () => {
-    render(<FeaturedMenu location={poblado} lang="es" />);
+  it("renders the featured sections present for the brand, in Spanish", () => {
+    render(<FeaturedMenu location={steakhouse} lang="es" />);
     expect(screen.getByText("Carnes premium")).toBeInTheDocument();
-    expect(screen.getByText("Cócteles de autor")).toBeInTheDocument();
     expect(screen.getByText("Recomendados")).toBeInTheDocument();
   });
 
+  it("shows the cocktail section for a brand that has cocktails", () => {
+    render(<FeaturedMenu location={barLounge} lang="es" />);
+    expect(screen.getByText("Cócteles de autor")).toBeInTheDocument();
+  });
+
   it("excludes unavailable featured items", () => {
-    render(<FeaturedMenu location={poblado} lang="es" />);
-    // Tomahawk is a premium meat but unavailable.
-    expect(screen.queryByText("Tomahawk")).not.toBeInTheDocument();
+    render(<FeaturedMenu location={steakhouse} lang="es" />);
+    // Entraña is a premium meat but unavailable.
+    expect(screen.queryByText("Entraña 350 g")).not.toBeInTheDocument();
   });
 
   it("renders nothing when there are no featured items", () => {

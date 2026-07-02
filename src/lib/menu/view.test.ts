@@ -31,7 +31,7 @@ describe("otherLanguage", () => {
 
 describe("resolveLocation", () => {
   it("returns the requested location", () => {
-    expect(resolveLocation("poblado").id).toBe("poblado");
+    expect(resolveLocation("steakhouse").id).toBe("steakhouse");
   });
 
   it("falls back to the default location for unknown or missing venue", () => {

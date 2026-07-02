@@ -11,7 +11,7 @@ import {
 import { TAURAS_LOCATIONS } from "@/lib/menu/fixtures";
 import type { MenuItem, MenuLocation } from "@/lib/menu/types";
 
-const poblado = TAURAS_LOCATIONS[0] as MenuLocation;
+const steakhouse = TAURAS_LOCATIONS[0] as MenuLocation;
 
 function item(overrides: Partial<MenuItem>): MenuItem {
   return {
@@ -89,14 +89,15 @@ describe("sortMenuItems", () => {
 
 describe("getFeaturedItems", () => {
   it("collects available items with the given feature across categories", () => {
-    const cocktails = getFeaturedItems(poblado, "cocktail");
-    expect(cocktails.map((i) => i.id)).toEqual(["negroni", "gin-tonic"]);
+    const recommended = getFeaturedItems(steakhouse, "recommended");
+    expect(recommended.map((i) => i.id)).toContain("brisket");
+    expect(recommended.map((i) => i.id)).toContain("bandeja-paisa");
   });
 
   it("excludes unavailable items even when flagged", () => {
-    const premium = getFeaturedItems(poblado, "premium_meat");
-    expect(premium.map((i) => i.id)).toEqual(["bife-de-chorizo", "ojo-de-bife"]);
-    expect(premium.some((i) => i.id === "tomahawk")).toBe(false);
+    const premium = getFeaturedItems(steakhouse, "premium_meat");
+    expect(premium.map((i) => i.id)).toEqual(["brisket", "rib-eye", "picanha"]);
+    expect(premium.some((i) => i.id === "entrana")).toBe(false);
   });
 
   it("returns an empty array when nothing matches", () => {
@@ -134,6 +135,6 @@ describe("isMenuEmpty", () => {
   });
 
   it("is false for a location that has items", () => {
-    expect(isMenuEmpty(poblado)).toBe(false);
+    expect(isMenuEmpty(steakhouse)).toBe(false);
   });
 });

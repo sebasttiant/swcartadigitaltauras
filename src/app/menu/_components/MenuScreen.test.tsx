@@ -6,51 +6,53 @@ import { MenuScreen } from "@/app/menu/_components/MenuScreen";
 import { TAURAS_LOCATIONS } from "@/lib/menu/fixtures";
 import type { MenuLocation } from "@/lib/menu/types";
 
-const poblado = TAURAS_LOCATIONS[0] as MenuLocation;
+const steakhouse = TAURAS_LOCATIONS[0] as MenuLocation;
 
 function renderScreen(lang: "es" | "en") {
   return render(
-    <MenuScreen location={poblado} locations={TAURAS_LOCATIONS} lang={lang} />,
+    <MenuScreen location={steakhouse} locations={TAURAS_LOCATIONS} lang={lang} />,
   );
 }
 
 describe("MenuScreen", () => {
-  it("renders the sede name, category headings, and items", () => {
+  it("renders the brand name, category headings, and items", () => {
     renderScreen("es");
-    expect(screen.getAllByText("Tauras El Poblado").length).toBeGreaterThan(0);
-    expect(screen.getByRole("heading", { name: "Carnes" })).toBeInTheDocument();
+    expect(screen.getAllByText("Tauras Steakhouse").length).toBeGreaterThan(0);
     expect(
-      screen.getByRole("heading", { name: "Cócteles" }),
+      screen.getByRole("heading", { name: "Parrilla importada" }),
     ).toBeInTheDocument();
-    expect(screen.getAllByText("Ojo de Bife").length).toBeGreaterThan(0);
+    expect(
+      screen.getByRole("heading", { name: "Entradas" }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("Brisket").length).toBeGreaterThan(0);
   });
 
   it("uses English labels when lang is en", () => {
     renderScreen("en");
     expect(
-      screen.getByRole("heading", { name: "Steaks" }),
+      screen.getByRole("heading", { name: "Imported grill" }),
     ).toBeInTheDocument();
-    expect(screen.getAllByText("Ribeye").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Ribeye 400 g").length).toBeGreaterThan(0);
   });
 
   it("exposes an always-visible language switch to the other language", () => {
     renderScreen("es");
     const link = screen.getByRole("link", { name: /English/ });
-    expect(link).toHaveAttribute("href", "?venue=poblado&lang=en");
+    expect(link).toHaveAttribute("href", "?venue=steakhouse&lang=en");
   });
 
   it("renders a navigable tab for each location", () => {
     renderScreen("es");
     const nav = screen.getByRole("navigation", { name: /sede|location/i });
     expect(
-      within(nav).getByRole("link", { name: /Tauras El Poblado/ }),
+      within(nav).getByRole("link", { name: /Tauras Steakhouse/ }),
     ).toBeInTheDocument();
   });
 
   it("shows unavailable items as not orderable", () => {
     renderScreen("es");
-    // Tomahawk is unavailable; it appears in the full listing marked as such.
-    const tomahawk = screen.getByText("Tomahawk").closest("article");
-    expect(tomahawk).toHaveAttribute("data-available", "false");
+    // Entraña is unavailable; it appears in the full listing marked as such.
+    const entrana = screen.getByText("Entraña 350 g").closest("article");
+    expect(entrana).toHaveAttribute("data-available", "false");
   });
 });
