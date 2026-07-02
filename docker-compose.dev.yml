@@ -15,6 +15,11 @@
 #   docker compose -f docker-compose.dev.yml up -d
 #   open http://localhost:3331/menu
 #
+# The db service publishes Postgres on host port 5433 (never 5432, so it cannot
+# collide with a local/Reservas Postgres) so host tooling can run migrations:
+#   DATABASE_URL=postgresql://cartadigital:cartadigital@localhost:5433/cartadigital \
+#     pnpm exec prisma migrate dev --name init
+#
 # This does NOT replace the productive Dockerfile / docker-compose.yml; it is a
 # local escape hatch only. CI still builds the real image as the source of truth.
 name: swcartadigitaltauras_preview_dev
@@ -24,6 +29,9 @@ services:
     image: node:24.18.0-slim
     working_dir: /app
     command: ["./node_modules/.bin/next", "dev", "-p", "3331", "-H", "0.0.0.0"]
+    depends_on:
+      db:
+        condition: service_healthy
     volumes:
       - ./:/app
     ports:
@@ -32,3 +40,33 @@ services:
     environment:
       NODE_ENV: development
       NEXT_TELEMETRY_DISABLED: "1"
+      # Dev-only defaults; production secrets live outside version control.
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-cartadigital}:${POSTGRES_PASSWORD:-cartadigital}@db:5432/${POSTGRES_DB:-cartadigital}?schema=public"
+      SESSION_SECRET: "${SESSION_SECRET:-dev-session-secret-change-me-32chars!!}"
+      ADMIN_EMAIL: "${ADMIN_EMAIL:-admin@ilasesorias}"
+      ADMIN_PASSWORD_HASH: "${ADMIN_PASSWORD_HASH:-}"
+
+  db:
+    image: postgres:18-alpine
+    ports:
+      # Host 5433 -> container 5432, so host tooling can migrate/seed. Never 5432.
+      - "${DB_PORT:-5433}:5432"
+    environment:
+      POSTGRES_USER: "${POSTGRES_USER:-cartadigital}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-cartadigital}"
+      POSTGRES_DB: "${POSTGRES_DB:-cartadigital}"
+    volumes:
+      # Postgres 18+ stores data in a version subdirectory, so the mount goes at
+      # /var/lib/postgresql (not /var/lib/postgresql/data). See docker-library/postgres#1259.
+      - pgdata_dev:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cartadigital} -d ${POSTGRES_DB:-cartadigital}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      # Ignore the brief bootstrap window where PG18 answers on a temporary
+      # server, so `web` never starts against a not-yet-ready database.
+      start_period: 10s
+
+volumes:
+  pgdata_dev:
