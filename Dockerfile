@@ -16,13 +16,22 @@ ARG NPM_CONFIG_REGISTRY=https://registry.npmjs.org/
 ENV NPM_CONFIG_REGISTRY=${NPM_CONFIG_REGISTRY}
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN npm install -g pnpm@${PNPM_VERSION} \
-    && pnpm config set store-dir /pnpm/store --global
+RUN npm install -g pnpm@${PNPM_VERSION}
+# Point pnpm at the store via an npm-style config env var (pnpm honors
+# `npm_config_*`) instead of `pnpm config set store-dir --global`, which aborts
+# the build because pnpm refuses a --global write while its global bin dir is
+# not yet on PATH. Set AFTER `npm install` so npm itself does not warn about the
+# unknown `store-dir` key; still matches the deps-stage cache mount at /pnpm/store.
+ENV npm_config_store_dir="/pnpm/store"
 WORKDIR /app
 
 # --- Dependencies (cached) ---
 FROM base AS deps
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+# The postinstall script runs `prisma generate`, which needs the Prisma schema
+# and config present at install time.
+COPY prisma.config.ts ./
+COPY prisma ./prisma
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile
 
