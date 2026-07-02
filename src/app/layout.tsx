@@ -18,6 +18,11 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // NOTE: `lang` is hardcoded to "es" because the public menu currently selects
+  // language via a `?lang=` search param resolved inside the page, which the
+  // root layout cannot read. Making <html lang> reflect the active language
+  // requires moving language into a route segment (e.g. `/[lang]/menu`) with its
+  // own layout. Deferred until locale routing is defined; Spanish is the default.
   return (
     <html lang="es">
       <body>{children}</body>

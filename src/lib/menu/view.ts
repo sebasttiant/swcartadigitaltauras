@@ -1,8 +1,4 @@
-import {
-  DEFAULT_LOCATION_ID,
-  findLocation,
-  TAURAS_LOCATIONS,
-} from "@/lib/menu/fixtures";
+import { DEFAULT_LOCATION_ID, findLocation } from "@/lib/menu/fixtures";
 import { DEFAULT_LANGUAGE, LANGUAGES } from "@/lib/menu/types";
 import type { Language, MenuLocation } from "@/lib/menu/types";
 
@@ -37,9 +33,4 @@ export function resolveLocation(raw: SearchParamValue): MenuLocation {
     return fallback;
   }
   return findLocation(raw) ?? fallback;
-}
-
-/** Lightweight tab descriptors for the location switcher. */
-export function locationTabs(): MenuLocation[] {
-  return TAURAS_LOCATIONS;
 }

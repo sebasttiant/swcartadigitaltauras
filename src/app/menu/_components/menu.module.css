@@ -1,4 +1,10 @@
 .screen {
+  /* Sticky offsets shared by the language topbar, the category nav that sits
+     directly below it, and the scroll target of each category section. */
+  --topbar-height: 3rem;
+  --catnav-height: 2.5rem;
+  --sticky-scroll-margin: calc(var(--topbar-height) + var(--catnav-height));
+
   width: 100%;
   max-width: 640px;
   margin: 0 auto;
@@ -81,7 +87,9 @@
   border: 1px solid color-mix(in srgb, var(--color-muted) 40%, transparent);
   color: var(--color-text);
   font-size: 0.85rem;
-  white-space: nowrap;
+  /* Long labels wrap and break instead of forcing horizontal overflow. */
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .tabActive {
@@ -96,7 +104,7 @@
   flex-wrap: wrap;
   gap: 0.5rem;
   position: sticky;
-  top: 3rem;
+  top: var(--topbar-height);
   z-index: 10;
   background: color-mix(in srgb, var(--color-bg) 88%, transparent);
   backdrop-filter: blur(8px);
@@ -142,7 +150,7 @@
 
 .category {
   margin-top: 1.5rem;
-  scroll-margin-top: 5.5rem;
+  scroll-margin-top: var(--sticky-scroll-margin);
 }
 
 .grid {
