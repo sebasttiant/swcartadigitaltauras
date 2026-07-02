@@ -1,0 +1,166 @@
+// Prisma schema for Carta Digital Tauras.
+//
+// Prisma 7 with the query compiler + driver adapters (see src/lib/db.ts): the
+// PrismaClient is constructed with a PrismaPg adapter, so no native query
+// engine is used. Prices are whole COP integers, mirroring the public DTO
+// contract in src/lib/menu/types.ts. Spanish is the source of truth; English
+// fields are optional and fall back to Spanish in the UI layer.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// Editorial capabilities an item can advertise (badges in the public UI).
+enum MenuFeatureKind {
+  premium_meat
+  cocktail
+  recommended
+}
+
+/// Access level for an admin user.
+enum AdminRole {
+  SUPER_ADMIN
+  MENU_EDITOR
+}
+
+/// A staff member who can sign in to the admin panel.
+model Admin {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  passwordHash   String
+  name           String
+  role           AdminRole @default(MENU_EDITOR)
+  isActive       Boolean   @default(true)
+  /// Bumping this invalidates every session issued before the change.
+  sessionVersion Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+/// One recorded sign-in attempt, used for DB-backed rate limiting and auditing.
+model LoginAttempt {
+  id        String   @id @default(cuid())
+  /// Normalized (trimmed, lowercased) email the attempt targeted.
+  emailKey  String
+  /// Coarse client identifier (e.g. hashed IP); optional.
+  ipKey     String?
+  success   Boolean
+  /// Machine-readable failure reason when unsuccessful (e.g. "bad_password").
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@index([emailKey, createdAt])
+  @@index([ipKey, createdAt])
+}
+
+/// A restaurant brand/location whose menu is shown publicly.
+model Brand {
+  id            String      @id @default(cuid())
+  slug          String      @unique
+  name          String
+  tagline       String?
+  /// Digits only in E.164 form without the leading '+', e.g. "573135398147".
+  whatsappPhone String
+  address       String?
+  isActive      Boolean     @default(true)
+  sortOrder     Int         @default(0)
+  categories    Category[]
+  promotions    Promotion[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+/// A section within a brand's menu (e.g. "Parrilla importada").
+model Category {
+  id        String     @id @default(cuid())
+  brand     Brand      @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  brandId   String
+  slug      String
+  nameEs    String
+  nameEn    String?
+  sortOrder Int        @default(0)
+  items     MenuItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@unique([brandId, slug])
+}
+
+/// A single dish, cocktail, or plate in a category.
+model MenuItem {
+  id         String            @id @default(cuid())
+  category   Category          @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId String
+  nameEs     String
+  nameEn     String?
+  descEs     String?
+  descEn     String?
+  /// Base price in whole COP. Null when the price is expressed only via variants.
+  price      Int?
+  currency   String            @default("COP")
+  available  Boolean           @default(true)
+  /// Convenience primary image URL kept in sync with the primary MenuItemImage.
+  imageUrl   String?
+  features   MenuFeatureKind[]
+  sortOrder  Int               @default(0)
+  variants   MenuItemVariant[]
+  images     MenuItemImage[]
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  @@index([categoryId, sortOrder])
+}
+
+/// A priced size/cut variant of an item, e.g. "225 g" vs "450 g".
+model MenuItemVariant {
+  id        String   @id @default(cuid())
+  item      MenuItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  itemId    String
+  labelEs   String
+  labelEn   String?
+  price     Int
+  sortOrder Int      @default(0)
+
+  @@index([itemId, sortOrder])
+}
+
+/// An uploaded photo for an item. Multiple images per item; one is primary.
+model MenuItemImage {
+  id        String   @id @default(cuid())
+  item      MenuItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  itemId    String
+  url       String
+  alt       String?
+  width     Int?
+  height    Int?
+  isPrimary Boolean  @default(false)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([itemId, sortOrder])
+}
+
+/// A time-boxed promotion highlighted for a brand.
+model Promotion {
+  id        String    @id @default(cuid())
+  brand     Brand     @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  brandId   String
+  titleEs   String
+  titleEn   String?
+  descEs    String?
+  descEn    String?
+  imageUrl  String?
+  price     Int?
+  active    Boolean   @default(true)
+  startsAt  DateTime?
+  endsAt    DateTime?
+  sortOrder Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([brandId, active])
+}
